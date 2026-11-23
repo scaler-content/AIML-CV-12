@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Computer Vision 12 post read</title>
+<style>
+
+:root{
+  --bg:#F3ECD9; --paper:#FBF7EB; --sand:#E7DBBE; --sand-d:#CDBE96; --line:#D5C7A3;
+  --ink:#18261F; --muted:#47574D;
+  --g900:#12392A; --g700:#1D5A41; --g500:#3A8660; --g200:#BCD9C4; --g100:#DDEBDD;
+  --clay:#9A5F33; --clay-100:#EBD5BC;
+  --serif:Georgia,"Iowan Old Style","Palatino Linotype",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.7 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--g700)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--g500);outline-offset:2px;border-radius:4px}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(243,236,217,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:18px;padding:8px 20px}
+.brand{font:700 .95rem var(--serif);color:var(--g900);white-space:nowrap}
+.toc{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin;flex:1}
+.toc a{white-space:nowrap;text-decoration:none;font-size:.82rem;font-weight:600;color:var(--muted);padding:5px 10px;border-radius:999px}
+.toc a:hover{background:var(--sand)}
+.toc a.on{background:var(--g700);color:#fff}
+.bar{height:3px;background:transparent}
+.bar i{display:block;height:100%;width:0;background:var(--g500)}
+
+/* hero */
+.hero{background:var(--g900);color:var(--paper);padding:72px 20px 64px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:
+  linear-gradient(90deg,rgba(243,236,217,.06) 1px,transparent 1px) 0 0/28px 28px,
+  linear-gradient(0deg,rgba(243,236,217,.06) 1px,transparent 1px) 0 0/28px 28px;pointer-events:none}
+.hero-in{max-width:860px;margin:0 auto;position:relative;z-index:1}
+.kicker{font:700 .78rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--g200)}
+.hero h1{font:700 clamp(2.2rem,5.5vw,3.6rem)/1.1 var(--serif);margin:.3em 0 .35em}
+.hero p.lede{font-size:1.2rem;max-width:36em;color:#E9E2CD;margin:0 0 30px}
+.obj{background:rgba(243,236,217,.1);border:1px solid rgba(243,236,217,.25);border-radius:14px;padding:20px 24px}
+.obj h2{font:700 .78rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--g200);margin:0 0 10px}
+.obj ol{margin:0;padding-left:1.3em}
+.obj li{margin:.3em 0}
+
+/* layout */
+main{max-width:860px;margin:0 auto;padding:0 20px 40px}
+section.sec{padding-top:64px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+.num{font:700 .9rem var(--mono);color:var(--paper);background:var(--g700);border-radius:6px;padding:2px 8px}
+h2.t{font:700 clamp(1.6rem,3.4vw,2.2rem)/1.2 var(--serif);color:var(--g900);margin:0}
+h3{font:700 1.2rem/1.3 var(--serif);color:var(--g900);margin:1.8em 0 .4em}
+p{margin:.7em 0}
+ul,ol{padding-left:1.3em}
+li{margin:.3em 0}
+code{font:.88em var(--mono);background:var(--sand);padding:.1em .35em;border-radius:4px}
+pre{background:var(--g900);color:#EFE9D4;padding:16px 18px;border-radius:12px;overflow-x:auto;font:.85rem/1.55 var(--mono);margin:10px 0}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+pre .out{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(243,236,217,.3);color:var(--g200)}
+details.code{margin:12px 0}
+details.code>summary{cursor:pointer;font-weight:600;color:var(--g700);padding:4px 0}
+
+/* callouts */
+.callout{border-left:5px solid var(--g500);background:var(--g100);border-radius:0 12px 12px 0;padding:12px 18px;margin:18px 0}
+.callout b.lab{display:block;font:700 .75rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700)}
+.callout.warm{border-color:var(--clay);background:var(--clay-100)}
+.callout.warm b.lab{color:var(--clay)}
+.callout p{margin:.3em 0}
+
+/* tables */
+.tw{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;background:var(--paper);font-size:.95rem}
+th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--g700);color:#fff;font-weight:600}
+td.k{font-weight:700;color:var(--g900)}
+tbody tr:hover td{background:var(--g100)}
+
+/* widget shell */
+.viz{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 20px 20px;margin:22px 0;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.viz>.vt{font:700 .78rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700);margin:0 0 4px}
+.viz>.vd{margin:0 0 14px;color:var(--muted);font-size:.95rem}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.col{flex:1 1 260px;min-width:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0 12px}
+.controls label{font-size:.9rem;font-weight:600;color:var(--muted)}
+.btn,.seg button,.chip{font:600 .88rem var(--sans);border:1.5px solid var(--g700);background:transparent;color:var(--g700);padding:6px 13px;border-radius:999px;cursor:pointer}
+.btn:hover,.seg button:hover,.chip:hover{background:var(--g100)}
+.btn.solid,.seg button[aria-pressed=true],.chip[aria-pressed=true]{background:var(--g700);color:#fff}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+input[type=number],select{font:600 .95rem var(--mono);padding:6px 8px;border:1.5px solid var(--sand-d);border-radius:8px;background:#fff;color:var(--ink);width:5.2em}
+select{width:auto;font-family:var(--sans)}
+input[type=range]{accent-color:var(--g700);width:100%;max-width:300px}
+.readout{background:var(--g100);border-radius:10px;padding:10px 14px;font-size:.95rem;margin-top:10px}
+.readout b{font-family:var(--mono)}
+.big{font:700 clamp(1.8rem,5vw,2.6rem)/1.1 var(--serif);color:var(--g900)}
+.sw{display:inline-block;width:1.4em;height:1.4em;border-radius:5px;border:1.5px solid rgba(0,0,0,.35);vertical-align:-.3em;margin-right:.4em}
+.cap{font-size:.85rem;color:var(--muted);margin:6px 0 0}
+.mono{font-family:var(--mono)}
+
+/* grids */
+.g{display:grid;gap:2px;grid-template-columns:repeat(var(--cols),1fr)}
+.g .c{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font:600 .8rem/1 var(--mono);border-radius:3px;background:var(--sand);color:var(--ink);overflow:hidden}
+.g.tight{gap:1px}
+.px{font-size:.6rem!important}
+.c.sel{outline:3px solid var(--ink);outline-offset:-3px;z-index:1}
+#pix-grid{max-width:480px;cursor:crosshair;border:2px solid var(--g900);border-radius:6px;padding:0;background:var(--g900)}
+#pix-grid:focus-visible{outline:3px solid var(--g500);outline-offset:3px}
+.mat{max-width:260px}
+.mat .c{font-size:1rem;aspect-ratio:1.15}
+.hl{background:var(--g200)!important;outline:2px solid var(--g700);outline-offset:-2px}
+.obj-c{background:var(--g500)!important;color:#fff}
+.w-c{box-shadow:inset 0 0 0 2px var(--clay)}
+.pad-c{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px)!important}
+.lbl{font:700 .78rem var(--sans);color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.06em}
+button.c{border:0;cursor:pointer;font:inherit}
+.filt{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-width:200px}
+.filt input{width:100%;text-align:center;padding:8px 2px}
+.sumline{font:.9rem/1.5 var(--mono);background:var(--g900);color:#EFE9D4;border-radius:10px;padding:10px 14px;overflow-x:auto;margin-top:10px}
+.arrow{align-self:center;font-size:1.6rem;color:var(--g700);padding:0 4px}
+
+/* pills */
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.pill{min-width:64px;text-align:center;border-radius:10px;padding:6px 10px;color:#fff;font-weight:700;line-height:1.2}
+.pill small{display:block;font:600 .72rem var(--sans);opacity:.9}
+.pill span{font:700 1.3rem var(--mono)}
+.p-H{background:var(--g700)}.p-W{background:var(--g500)}.p-C{background:var(--clay)}.p-B{background:var(--g900)}
+
+/* math */
+.math{font:1.1rem var(--serif);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 18px;margin:14px 0;overflow-x:auto;text-align:center}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .25em;font-size:.95em}
+.frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .3em}
+.frac>span:last-child{padding:0 .3em}
+sub{font-size:.7em}
+
+/* pipeline */
+.pipe{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.node{font:700 .9rem var(--sans);padding:10px 14px;border-radius:12px;border:2px solid var(--g700);background:var(--paper);color:var(--g900);cursor:pointer}
+.node[aria-pressed=true]{background:var(--g700);color:#fff}
+.node.io{border-style:dashed;cursor:default;border-color:var(--sand-d);color:var(--muted)}
+.grp{border:2px dashed var(--g500);border-radius:16px;padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.grp>.gl{font:700 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--g700)}
+.grp>.ns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sep{color:var(--g700);font-weight:700}
+
+/* bars */
+.bars .br{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center;margin:8px 0;font-size:.92rem}
+.bars .tr{background:var(--sand);border-radius:8px;height:26px;overflow:hidden;position:relative}
+.bars .fl{height:100%;background:var(--g700);min-width:3px;border-radius:8px 0 0 8px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font:700 .78rem var(--mono);white-space:nowrap}
+.bars .fl.alt{background:var(--clay)}
+.bars .vl{margin-left:8px;font:700 .85rem var(--mono);color:var(--ink)}
+
+/* layer ribbon */
+.layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.layer{text-align:left;border:2px solid var(--g700);background:var(--paper);border-radius:12px;padding:10px;cursor:pointer;font:inherit;color:var(--ink)}
+.layer[aria-pressed=true]{background:var(--g700);color:#fff}
+.layer b{display:block;font-size:.85rem}
+.layer span{display:block;font:.78rem var(--mono);margin-top:4px;word-break:break-all}
+
+/* strip (stride/padding) */
+.strip{display:flex;gap:2px;overflow-x:auto;padding:4px 0}
+.strip .s{flex:0 0 auto;width:16px;height:30px;border-radius:3px;background:var(--g200)}
+.strip .s.p{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px)}
+.strip .s.w{background:var(--g700)}
+.strip .o{background:var(--g500);opacity:.35}
+.strip .o.cur{opacity:1;background:var(--clay)}
+
+/* quiz */
+.quiz{background:var(--g100);border:1px solid var(--g200);border-radius:14px;padding:16px 20px;margin:20px 0}
+.quiz .ql{font:700 .75rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--g700);margin:0}
+.quiz .qt{font-weight:600;margin:.3em 0 .6em}
+.quiz fieldset{border:0;padding:0;margin:0}
+.qo{margin:6px 0}
+.qo input{position:absolute;opacity:0}
+.qo label{display:block;border:2px solid var(--g200);background:var(--paper);padding:9px 14px;border-radius:10px;cursor:pointer}
+.qo label:hover{border-color:var(--g500)}
+.qo input:focus-visible+label{outline:3px solid var(--g500);outline-offset:2px}
+.qo.right label{border-color:var(--g700);background:#fff;box-shadow:inset 6px 0 0 var(--g700)}
+.qo.wrong label{border-color:var(--clay);background:var(--clay-100);box-shadow:inset 6px 0 0 var(--clay)}
+.qfb{margin-top:10px;font-size:.95rem}
+
+/* details / flashcards */
+details.dq{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:2px 16px;margin:10px 0}
+details.dq summary{cursor:pointer;font-weight:600;padding:10px 0;color:var(--g900)}
+.fcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.fc{text-align:left;font:inherit;color:var(--ink);background:var(--paper);border:2px solid var(--g700);border-radius:14px;padding:16px;cursor:pointer;min-height:150px}
+.fc .q{font-weight:700;color:var(--g900)}
+.fc .a{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--g500)}
+.fc[aria-expanded=true]{background:var(--g100)}
+.fc[aria-expanded=true] .a{display:block}
+.fc .hint{display:block;margin-top:10px;font-size:.8rem;color:var(--g700);font-weight:600}
+.fc[aria-expanded=true] .hint{display:none}
+.take{counter-reset:t;list-style:none;padding:0}
+.take li{counter-increment:t;display:flex;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:8px 0}
+.take li::before{content:counter(t);flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--g700);color:#fff;font:700 .9rem var(--sans);display:grid;place-items:center}
+
+footer{background:var(--g900);color:var(--g200);text-align:center;padding:28px 20px;font:600 .95rem var(--serif);margin-top:40px}
+
+@media (max-width:600px){
+  body{font-size:16px}
+  .hero{padding:48px 16px 44px}
+  .viz{padding:14px}
+  .brand{display:none}
+  .bars .br{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.chart{width:100%;height:auto;display:block;touch-action:pan-y}
+.chart text{font-family:var(--sans);fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 4px;font-size:.85rem;font-weight:600}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:34px;height:12px}
+.tag{display:inline-block;font:700 .75rem var(--sans);background:var(--g100);color:var(--g700);border:1px solid var(--g200);border-radius:999px;padding:1px 10px;margin:2px 3px 2px 0}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.mini{background:var(--paper);border:1px solid var(--line);border-top:5px solid var(--g500);border-radius:12px;padding:12px 16px}
+.mini.c2{border-top-color:var(--clay)}.mini.c3{border-top-color:var(--g900)}
+.mini b{display:block;font:700 .78rem var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--g700)}
+.unit{aspect-ratio:1;border-radius:50%;background:var(--g500);display:flex;align-items:center;justify-content:center;color:#fff;font:700 .8rem var(--mono)}
+.unit.off{background:repeating-linear-gradient(45deg,var(--sand),var(--sand) 3px,var(--sand-d) 3px,var(--sand-d) 5px);color:var(--ink);border:2px dashed var(--clay)}
+.frame{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 .78rem var(--mono);color:#fff;border:3px solid transparent}
+.frame.tr{background:var(--g700)}.frame.va{background:var(--clay)}
+.frame.dup{border-color:var(--ink);box-shadow:0 0 0 2px #fff inset}
+.flow{display:flex;flex-direction:column;gap:6px;max-width:420px;margin:14px auto}
+.flow div{background:var(--g700);color:#fff;border-radius:10px;padding:10px 16px;text-align:center;font-weight:600}
+.flow div:nth-child(even){background:transparent;color:var(--g700);padding:0;font-size:1.3rem;line-height:1}
+.flow div:last-child{background:var(--g900)}
+.ex{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:8px 0}
+.ex .nums{font:.95rem/1.6 var(--mono);background:var(--g900);color:#EFE9D4;border-radius:8px;padding:8px 12px;margin:6px 0;white-space:pre-wrap}
+.step6{counter-reset:s;list-style:none;padding:0}
+.step6 li{counter-increment:s;display:flex;gap:12px;margin:6px 0}
+.step6 li::before{content:counter(s);flex:0 0 28px;height:28px;border-radius:50%;background:var(--g700);color:#fff;font:700 .85rem var(--sans);display:grid;place-items:center}
+
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 16px;text-align:center}
+.stat b{display:block;font:700 1.7rem var(--serif);color:var(--g900)}
+.stat span{font-size:.82rem;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.sv{width:100%;max-width:360px;border:2px solid var(--line);border-radius:10px;background:var(--paper)}
+.sv text{font:700 5px var(--mono);fill:#18261F}
+.sv.im{max-width:300px}
+.sv.im text{font:700 26px var(--mono)}
+.chk{border:1px solid var(--line);border-left:5px solid var(--clay);background:var(--clay-100);border-radius:0 12px 12px 0;padding:10px 16px;margin:16px 0}
+.chk summary{cursor:pointer;font-weight:700;color:var(--ink)}
+.chk summary:focus-visible{outline:3px solid var(--g500);outline-offset:3px}
+.chk p{margin:.5em 0 0}
+.math{text-align:center;font:700 1.1rem var(--serif);margin:10px 0;overflow-x:auto}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;align-items:start}
+.pg{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;max-width:340px}
+.pg button{aspect-ratio:1;border:2px solid var(--line);background:var(--paper);border-radius:4px;cursor:pointer;font:700 .9rem var(--mono);color:var(--ink);padding:0}
+.pg button.p{background:var(--g500);color:#fff}
+.pg button:focus-visible{outline:3px solid var(--g900);outline-offset:1px}
+.lk{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;max-width:420px;margin:10px 0}
+.lk div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font:700 .8rem var(--mono);background:var(--g200);color:var(--g900);border:2px solid var(--g700)}
+.lk div.bad{background:var(--clay-100);border-color:var(--clay);color:var(--clay)}
+.cm{display:grid;grid-template-columns:auto repeat(2,90px);gap:4px;font:600 .85rem var(--sans);max-width:320px}
+.cm div{padding:10px 6px;text-align:center;border-radius:6px;background:var(--sand)}
+.cm .g{background:var(--g200);font:700 1.1rem var(--mono)}.cm .b{background:var(--clay-100);font:700 1.1rem var(--mono)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <span class="brand">Computer Vision 12 post read</span>
+    <nav class="toc" aria-label="Sections" id="toc"></nav>
+  </div>
+  <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+</header>
+
+<div class="hero">
+  <div class="hero-in">
+    <div class="kicker">Computer Vision · Generating images with GANs</div>
+    <h1>Computer Vision 12 post read</h1>
+    <p class="lede">Creating the unseen. A studio has a collection of anime faces but no labels, and wants new character concepts. Instead of asking “which label belongs to this image?”, a GAN asks “what kinds of images could plausibly come from this collection?” This read covers generator and discriminator, the adversarial objective, training and its pitfalls, and StyleGAN, SRGAN and CycleGAN.</p>
+    <div class="obj">
+      <h2>Learning outcomes</h2>
+      <ol>
+        <li>Generative vs. discriminative models</li>
+        <li>The roles of the generator and discriminator</li>
+        <li>Preparing images in the range a <code>tanh</code> generator expects</li>
+        <li>A CNN discriminator and a transposed-convolution generator</li>
+        <li>Binary cross-entropy and alternating adversarial optimization</li>
+        <li>Training a small GAN, reading losses and samples</li>
+        <li>Mode collapse, instability and vanishing gradients</li>
+        <li>Where StyleGAN, SRGAN and CycleGAN are useful</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- 1 -->
+<section class="sec" id="gen" aria-labelledby="h-g" data-nav="Generative vs discriminative">
+  <div class="sec-head"><span class="num">01</span><h2 class="t" id="h-g">Generative vs. discriminative models</h2></div>
+  <div class="callout warm"><b class="lab">Keep expectations realistic</b><p>A GAN does not understand a character in the human sense, and it is not guaranteed to create a useful or unique design: it learns statistical patterns from its training data. This is a teaching-scale experiment, not a production-quality anime generator.</p></div>
+  <div class="viz" id="gv-viz">
+    <p class="vt">Explorer · Three model types</p>
+    <div class="controls"><div class="seg" id="gv-seg" role="group" aria-label="Model type"></div></div>
+    <svg id="gv-svg" class="sv" style="max-width:520px" viewBox="0 0 260 70" role="img" aria-label="Input and output of the chosen model type"></svg>
+    <div class="readout" id="gv-read" aria-live="polite"></div>
+  </div>
+  <details class="chk"><summary>Check yourself: how does a generative model differ from a discriminative one? Give one vision example of each.</summary><p>A discriminative model predicts a target from an input (image → cat/dog). A generative model learns patterns in the data distribution and can produce new samples (random latent vector → synthetic image).</p></details>
+  <div class="quiz" data-quiz="q1"></div>
+  <div class="quiz" data-quiz="q2"></div>
+</section>
+
+<!-- 2 -->
+<section class="sec" id="gan" aria-labelledby="h-ga" data-nav="Two networks">
+  <div class="sec-head"><span class="num">02</span><h2 class="t" id="h-ga">Two networks in competition</h2></div>
+  <p>A GAN has two networks. The <b>generator (G)</b> maps a random latent vector <code>z</code> to a synthetic image. The <b>discriminator (D)</b> receives a real or generated image and estimates whether it is real. D is trained to tell them apart; G is trained to make its samples receive a “real” prediction. It is often described as a cat-and-mouse game.</p>
+  <p>“Adversarial” means D learns from two kinds of examples (real images → real, generated images → fake), while G receives gradients <b>through</b> D and adjusts its parameters so its images are more likely to be classified as real. G does not “want” anything: it simply follows gradients.</p>
+  <div class="viz" id="fl-viz">
+    <p class="vt">Visualizer · What happens in each update</p>
+    <div class="controls"><div class="seg" id="fl-seg" role="group" aria-label="Update step"></div></div>
+    <svg id="fl-svg" class="sv" style="max-width:560px" viewBox="0 0 280 100" role="img" aria-label="Data flow from noise through generator and discriminator"></svg>
+    <div class="readout" id="fl-read" aria-live="polite"></div>
+  </div>
+  <div class="quiz" data-quiz="q3"></div>
+  <div class="quiz" data-quiz="q4"></div>
+</section>
+
+<!-- 3 -->
+<section class="sec" id="data" aria-labelledby="h-d" data-nav="Dataset">
+  <div class="sec-head"><span class="num">03</span><h2 class="t" id="h-d">Dataset preparation: anime faces</h2></div>
+  <p>The <code>huggan/anime-faces</code> dataset provides 64×64 anime-face images; its dataset card notes some poor crops and non-human faces. It is a single training split, with no labels. For a manageable lesson the notebook <b>streams 3,000 images</b> (stopping with an error if fewer than 256 are read) and builds a DataLoader with batch size 64, shuffling, and <code>drop_last</code>.</p>
+  <div class="stats">
+    <div class="stat"><b>3,000</b><span>images streamed</span></div>
+    <div class="stat"><b>64 × 64</b><span>RGB image size</span></div>
+    <div class="stat"><b>(64, 3, 64, 64)</b><span>batch shape</span></div>
+    <div class="stat"><b>−1 to 1</b><span>pixel range after normalization</span></div>
+  </div>
+  <p>Preprocessing: convert to RGB, resize to 64×64, convert to tensors in [0, 1], then normalize to <b>[−1, 1]</b>. Why? The generator ends in <code>tanh</code>, whose output range is [−1, 1]; matching the real-image range keeps discriminator inputs consistent.</p>
+  <div class="viz" id="nr-viz">
+    <p class="vt">Visualizer · [0, 255] → [0, 1] → [−1, 1]</p>
+    <div class="controls"><label for="nr-p">Pixel value</label><input type="range" id="nr-p" min="0" max="255" value="64" style="max-width:240px"><b class="mono" id="nr-pv"></b></div>
+    <div class="bars" id="nr-bars"></div>
+    <div class="readout" id="nr-read" aria-live="polite"></div>
+  </div>
+  <div class="viz" id="sc-viz">
+    <p class="vt">Explorer · Why ranges must match</p>
+    <div class="controls"><div class="seg" id="sc-seg" role="group" aria-label="Real image range"></div></div>
+    <div class="bars" id="sc-bars"></div>
+    <div class="readout" id="sc-read" aria-live="polite"></div>
+  </div>
+  <details class="chk"><summary>Check yourself: why is normalization part of model design, not just cosmetic preprocessing?</summary><p>The range of the real data must match the generator's output activation. Otherwise the discriminator can separate real from fake by numeric scale instead of image structure.</p></details>
+  <div class="quiz" data-quiz="q5"></div>
+  <div class="quiz" data-quiz="q6"></div>
+</section>
+
+<!-- 4 -->
+<section class="sec" id="disc" aria-labelledby="h-di" data-nav="Discriminator">
+  <div class="sec-head"><span class="num">04</span><h2 class="t" id="h-di">Discriminator: a real-vs-fake CNN</h2></div>
+  <p>The discriminator takes a <code>3 × 64 × 64</code> image and downsamples it with strided convolutions. DCGAN-style design: <code>Conv2d</code> to learn spatial features and shrink the map; <code>LeakyReLU</code> to keep a small gradient for negative activations; <code>BatchNorm2d</code> in intermediate layers (not necessarily every layer); and a final scalar <b>logit</b>.</p>
+  <div class="viz" id="dc-viz">
+    <p class="vt">Visualizer · Walk the discriminator</p>
+    <div class="pipe" id="dc-pipe"></div>
+    <div class="readout" id="dc-read" aria-live="polite"></div>
+    <div class="bars" id="dc-bars"></div>
+  </div>
+  <div class="callout"><b class="lab">Logit, not probability</b><p>The loss is <code>BCEWithLogitsLoss</code>, which fuses sigmoid and binary cross-entropy in a numerically stable way, so the discriminator returns a raw logit. Apply a sigmoid only to display a probability. Its task is binary: “real training sample” vs. “generated sample”; it does not identify character categories.</p></div>
+  <div class="viz" id="lr-viz">
+    <p class="vt">Visualizer · LeakyReLU vs. ReLU</p>
+    <div class="controls"><label for="lr-s">Negative slope</label><input type="range" id="lr-s" min="0" max="50" value="20" style="max-width:200px"><b class="mono" id="lr-sv"></b></div>
+    <div id="lr-chart"></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="sec" id="genr" aria-labelledby="h-ge" data-nav="Generator">
+  <div class="sec-head"><span class="num">05</span><h2 class="t" id="h-ge">Generator: noise to image</h2></div>
+  <p>The generator starts from a latent vector of length 100, treated as a <code>100 × 1 × 1</code> map, and uses <code>ConvTranspose2d</code> layers (a learned upsampling) to grow it to <code>3 × 64 × 64</code>. Intermediate layers use <code>BatchNorm2d</code> and <code>ReLU</code>; the last layer uses <code>Tanh</code> to produce RGB values in [−1, 1].</p>
+  <div class="viz" id="gn-viz">
+    <p class="vt">Visualizer · Walk the generator</p>
+    <div class="pipe" id="gn-pipe"></div>
+    <div class="readout" id="gn-read" aria-live="polite"></div>
+    <div class="bars" id="gn-bars"></div>
+  </div>
+  <p>A test batch of 8 latent vectors produced a tensor of shape <code>(8, 3, 64, 64)</code> with values from −0.9996 to 0.9999, all inside the tanh range. An <b>untrained</b> generator's images look like noise.</p>
+  <details class="code"><summary>Code and output</summary>
+<pre><code>nn.ConvTranspose2d(latent_dim, 512, 4, 1, 0, bias=False)  # 4x4
+nn.ConvTranspose2d(512, 256, 4, 2, 1, bias=False)          # 8x8
+nn.ConvTranspose2d(256, 128, 4, 2, 1, bias=False)          # 16x16
+nn.ConvTranspose2d(128, 64, 4, 2, 1, bias=False)           # 32x32
+nn.ConvTranspose2d(64, 3, 4, 2, 1, bias=False); nn.Tanh()  # 64x64
+<span class="out">Generated batch shape: (8, 3, 64, 64)
+Generated range: -0.9995979070663452 to 0.9999189376831055
+Generator parameters: 3576704
+Discriminator parameters: 2765633</span></code></pre></details>
+  <div class="quiz" data-quiz="q7"></div>
+  <div class="quiz" data-quiz="q8"></div>
+</section>
+
+<!-- 6 -->
+<section class="sec" id="obj" aria-labelledby="h-o" data-nav="Objective">
+  <div class="sec-head"><span class="num">06</span><h2 class="t" id="h-o">The adversarial objective and training order</h2></div>
+  <p>With <code>x</code> a real image, <code>z</code> a latent vector and <code>D(·)</code> a logit, both losses use binary cross-entropy with logits:</p>
+  <div class="math">L<sub>D</sub> = BCE(D(x), 1) + BCE(D(G(z)), 0)</div>
+  <div class="math">L<sub>G</sub> = BCE(D(G(z)), 1)</div>
+  <p>The generator loss is the commonly used <b>non-saturating</b> objective: it keeps providing a useful learning signal when the discriminator initially rejects generated samples strongly.</p>
+  <div class="viz" id="lo-viz">
+    <p class="vt">Visualizer · Compute both losses from two logits</p>
+    <div class="controls"><label for="lo-r">D(x) real logit</label><input type="range" id="lo-r" min="-80" max="80" value="30" style="max-width:150px"><b class="mono" id="lo-rv"></b><label for="lo-f">D(G(z)) fake logit</label><input type="range" id="lo-f" min="-80" max="80" value="-30" style="max-width:150px"><b class="mono" id="lo-fv"></b></div>
+    <div class="controls"><button type="button" class="chip" data-r="40" data-f="-40">D wins</button><button type="button" class="chip" data-r="0" data-f="0">D at chance</button><button type="button" class="chip" data-r="10" data-f="30">G fools D</button></div>
+    <div class="bars" id="lo-bars"></div>
+    <div class="readout" id="lo-read" aria-live="polite"></div>
+  </div>
+  <div class="viz" id="gr-viz">
+    <p class="vt">Visualizer · Why “non-saturating”?</p>
+    <p class="vd">Size of the gradient reaching G through the fake logit, as the discriminator becomes more confident the image is fake (left side). The saturating form is shown only for comparison; the notebook uses the non-saturating loss.</p>
+    <div id="gr-chart"></div>
+  </div>
+  <h3>Training order</h3>
+  <div class="viz" id="od-viz">
+    <p class="vt">Stepper · One training iteration</p>
+    <div class="pipe" id="od-pipe"></div>
+    <div class="readout" id="od-read" aria-live="polite"></div>
+  </div>
+  <p><b>Why detach during the D update?</b> <code>fake.detach()</code> stops gradients flowing back into G during that step, so only D's parameters change. <b>Why not detach during the G update?</b> G needs gradients that pass through D to reach its own parameters; D's weights are frozen with <code>requires_grad=False</code>, but its operations stay in the computation graph.</p>
+  <p>Optimizers: Adam, learning rate 0.0002, betas (0.5, 0.999) for both networks; loss <code>BCEWithLogitsLoss</code>; a fixed noise batch of 64 latent vectors is reused every epoch to compare progress.</p>
+  <div class="quiz" data-quiz="q9"></div>
+  <div class="quiz" data-quiz="q10"></div>
+  <div class="quiz" data-quiz="q11"></div>
+  <div class="quiz" data-quiz="q12"></div>
+</section>
+
+<!-- 7 -->
+<section class="sec" id="train" aria-labelledby="h-t" data-nav="Training run">
+  <div class="sec-head"><span class="num">07</span><h2 class="t" id="h-t">Train, monitor and read the losses</h2></div>
+  <p>The run trains for <b>5 epochs</b> on the 3,000 images (a GPU is strongly recommended; about 0.5 minutes in the recorded run). After each epoch the generator renders the fixed noise batch, so the same latent vectors can be compared over time; a GIF and TensorBoard scalars record progress. Do not expect a polished face after only a few epochs.</p>
+  <div class="viz" id="tl-viz">
+    <p class="vt">Visualizer · Recorded GAN losses</p>
+    <div id="tl-chart"></div>
+    <div class="tw"><table><thead><tr><th>Epoch</th><th>D loss</th><th>G loss</th></tr></thead><tbody id="tl-tb"></tbody></table></div>
+    <div class="readout" id="tl-read" aria-live="polite"></div>
+  </div>
+  <p class="cap">The sample grids from each epoch were images in the notebook and are not reproduced here.</p>
+  <div class="callout warm"><b class="lab">Reading GAN losses carefully</b><ul><li>The networks compete: one loss can rise while the other falls.</li><li>A low discriminator loss is not automatically good news: D may be overpowering G.</li><li>A low generator loss does not prove images are diverse or realistic.</li><li>Always inspect sample quality and diversity next to the curves. Never use one loss value as a GAN quality score.</li></ul></div>
+  <details class="code"><summary>Code and output</summary>
+<pre><code>real_logits = discriminator(real);  fake_logits = discriminator(fake.detach())
+loss_D = criterion(real_logits, real_targets) + criterion(fake_logits, fake_targets)
+...
+loss_G = criterion(discriminator(fake_for_G), real_targets)
+<span class="out">Epoch 1/5 | D loss: 0.522 | G loss: 8.753
+Epoch 2/5 | D loss: 1.157 | G loss: 6.482
+Epoch 3/5 | D loss: 0.843 | G loss: 4.202
+Epoch 4/5 | D loss: 0.896 | G loss: 4.066
+Epoch 5/5 | D loss: 0.854 | G loss: 4.370</span></code></pre></details>
+  <div class="quiz" data-quiz="q13"></div>
+  <div class="quiz" data-quiz="q14"></div>
+</section>
+
+<!-- 8 -->
+<section class="sec" id="chal" aria-labelledby="h-c" data-nav="Challenges">
+  <div class="sec-head"><span class="num">08</span><h2 class="t" id="h-c">Challenges in GAN training</h2></div>
+  <div class="viz" id="ch-viz">
+    <p class="vt">Explorer · Four failure themes</p>
+    <div class="controls"><div class="seg" id="ch-seg" role="group" aria-label="Challenge"></div></div>
+    <div class="readout" id="ch-read" aria-live="polite"></div>
+  </div>
+  <div class="viz" id="mc-viz">
+    <p class="vt">Visualizer · What mode collapse looks like in a sample grid</p>
+    <p class="vd">Sixteen illustrative “faces”, each reduced to one attribute (shade and a digit). Raise collapse and many different latent vectors produce nearly the same output.</p>
+    <div class="controls"><label for="mc-c">Collapse</label><input type="range" id="mc-c" min="0" max="100" value="0" style="max-width:220px"><b class="mono" id="mc-cv"></b></div>
+    <div class="lk" id="mc-grid" role="img" aria-label="Sixteen sample tiles"></div>
+    <div class="readout" id="mc-read" aria-live="polite"></div>
+  </div>
+  <p><b>Optional stabilizer: spectral normalization</b> constrains the scale of a layer's weights and can help control discriminator behaviour. It is not a universal fix and does not guarantee stable training. The notebook builds a spectral-normalized discriminator only to check its output shape (<code>(2,)</code>); it does not retrain.</p>
+  <p>Change one setting at a time (learning rate, latent dimension, epochs, batch size, D:G update ratio) and keep everything else fixed so the comparison is interpretable.</p>
+  <div class="quiz" data-quiz="q15"></div>
+</section>
+
+<!-- 9 -->
+<section class="sec" id="app" aria-labelledby="h-a" data-nav="Applications">
+  <div class="sec-head"><span class="num">09</span><h2 class="t" id="h-a">Applications: StyleGAN, SRGAN, CycleGAN</h2></div>
+  <p>These share the GAN idea but solve different tasks.</p>
+  <div class="viz" id="ap-viz">
+    <p class="vt">Explorer · Three GAN families</p>
+    <div class="controls"><div class="seg" id="ap-seg" role="group" aria-label="Family"></div></div>
+    <div class="readout" id="ap-read" aria-live="polite"></div>
+  </div>
+  <div class="quiz" data-quiz="q16"></div>
+  <div class="quiz" data-quiz="q17"></div>
+  <div class="quiz" data-quiz="q18"></div>
+</section>
+
+<!-- 10 -->
+<section class="sec" id="recap" aria-labelledby="h-rc" data-nav="Recap">
+  <div class="sec-head"><span class="num">10</span><h2 class="t" id="h-rc">Recap and final check</h2></div>
+  <div class="quiz" data-quiz="q19"></div>
+  <div class="quiz" data-quiz="q20"></div>
+  <p>Answer each prompt in your own words, then flip the card.</p>
+  <div class="fcs" id="fcs"></div>
+  <p>To try on your own: change <b>one</b> training setting, train a second run, and compare sample diversity, visual quality, the two loss curves and training time, keeping the data subset and all other settings fixed.</p>
+  <p>This completes the Computer Vision sequence: from image representation and CNNs to detection, segmentation, verification and generative modelling.</p>
+</section>
+
+</main>
+
+<footer>Computer Vision 12 post read</footer>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const fmt=n=>Number(n).toLocaleString('en-US');
+function h(tag,attrs,...kids){const e=document.createElement(tag);for(const[k,v]of Object.entries(attrs||{})){if(k==='class')e.className=v;else if(k==='style')e.style.cssText=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else if(v!==false&&v!=null)e.setAttribute(k,v);}
+  kids.flat().forEach(c=>{if(c==null||c===false)return;e.append(c.nodeType?c:document.createTextNode(c));});return e;}
+function seg(host,items,cur,cb){host.innerHTML='';items.forEach(([v,l])=>{const b=h('button',{type:'button','aria-pressed':String(v===cur)},l);b.addEventListener('click',()=>{$$('button',host).forEach((x,i)=>x.setAttribute('aria-pressed',String(items[i][0]===v)));cb(v);});host.append(b);});}
+function mkGrid(host,rows,cols,fn){host.innerHTML='';host.style.setProperty('--cols',cols);const cells=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const d=h('div',{class:'c'});fn&&fn(d,r,c);host.append(d);cells.push(d);}return cells;}
+
+/* nav */
+(function(){const toc=$('#toc');$$('section.sec').forEach(s=>toc.append(h('a',{href:'#'+s.id},s.dataset.nav)));const links=$$('a',toc);
+ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.toggle('on',l.getAttribute('href')==='#'+e.target.id));const on=$('a.on',toc);if(on)on.scrollIntoView({block:'nearest',inline:'center'});}}),{rootMargin:'-30% 0px -60% 0px'});
+ $$('section.sec').forEach(s=>io.observe(s));const prog=$('#prog');const upd=()=>{const d=document.documentElement;prog.style.width=(100*d.scrollTop/(d.scrollHeight-d.clientHeight||1))+'%';};addEventListener('scroll',upd,{passive:true});upd();})();
+
+/* ---------- line chart ---------- */
+function lineChart(host,o){
+  host.innerHTML='';
+  const W=640,H=300,m={l:56,r:16,t:14,b:44},n=o.xs.length,dec=o.dec??3;
+  const all=o.series.flatMap(s=>s.vals);let lo=o.ymin??Math.min(...all),hi=o.ymax??Math.max(...all);if(o.ymin==null||o.ymax==null){const p=(hi-lo)*.08||.1;if(o.ymin==null)lo-=p;if(o.ymax==null)hi+=p;}
+  const x=i=>m.l+(n===1?0:i*(W-m.l-m.r)/(n-1)),y=v=>m.t+(hi-v)*(H-m.t-m.b)/(hi-lo||1);
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="${o.aria||'Line chart'}. Use left and right arrow keys to read values.">`;
+  for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4,yy=y(v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${yy}" y2="${yy}" stroke="#D5C7A3" stroke-width="1"/><text x="${m.l-8}" y="${yy+4}" font-size="11" text-anchor="end">${(+v.toFixed(2)).toString()}</text>`;}
+  const step=Math.ceil(n/12);o.xs.forEach((l,i)=>{if(i%step===0||i===n-1)s+=`<text x="${x(i)}" y="${H-m.b+16}" font-size="11" text-anchor="middle">${l}</text>`;});
+  s+=`<text x="${(W+m.l)/2}" y="${H-6}" font-size="12" text-anchor="middle">${o.xTitle||'Epoch'}</text><text x="14" y="${H/2}" font-size="12" text-anchor="middle" transform="rotate(-90 14 ${H/2})">${o.yTitle||''}</text>`;
+  if(o.zero!==false&&lo<0&&hi>0)s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(0)}" y2="${y(0)}" stroke="#18261F" stroke-width="1.5"/>`;
+  o.series.forEach(se=>{const pts=se.vals.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+    s+=`<polyline points="${pts}" fill="none" stroke="${se.color}" stroke-width="${se.w||2.5}" ${se.dash?`stroke-dasharray="${se.dash}"`:''} stroke-linejoin="round"/>`;
+    if(n<=30)se.vals.forEach((v,i)=>{s+=se.shape==='sq'?`<rect x="${x(i)-3.5}" y="${y(v)-3.5}" width="7" height="7" fill="${se.color}"/>`:se.shape==='tri'?`<path d="M${x(i)},${y(v)-4.5}l4.5,8h-9z" fill="${se.color}"/>`:`<circle cx="${x(i)}" cy="${y(v)}" r="3.3" fill="${se.color}"/>`;});});
+  (o.marks||[]).forEach(mk=>{s+=`<line x1="${x(mk.i)}" x2="${x(mk.i)}" y1="${m.t}" y2="${H-m.b}" stroke="${mk.color||'#18261F'}" stroke-width="2" stroke-dasharray="3 3"/><text x="${x(mk.i)+4}" y="${m.t+12}" font-size="11" font-weight="700" style="fill:#18261F">${mk.label}</text>`;});
+  s+=`<g id="hv" style="display:none"><line id="hl" y1="${m.t}" y2="${H-m.b}" stroke="#18261F" stroke-width="1.5"/></g></svg>`;
+  const leg=h('div',{class:'legend'});o.series.forEach(se=>leg.append(h('span',{},(()=>{const e=document.createElementNS('http://www.w3.org/2000/svg','svg');e.setAttribute('viewBox','0 0 34 12');e.innerHTML=`<line x1="2" x2="32" y1="6" y2="6" stroke="${se.color}" stroke-width="3" ${se.dash?`stroke-dasharray="${se.dash}"`:''}/>`+(se.shape==='sq'?`<rect x="13" y="2" width="8" height="8" fill="${se.color}"/>`:se.shape==='tri'?`<path d="M17,1l5,10h-10z" fill="${se.color}"/>`:`<circle cx="17" cy="6" r="4" fill="${se.color}"/>`);return e;})(),se.name)));
+  const box=h('div');box.innerHTML=s;const svg=box.firstChild;const rd=h('div',{class:'readout','aria-live':'polite'},o.hint||'Hover the chart, or focus it and use ← → keys, to read exact values.');
+  host.append(leg,box,rd);
+  const hv=$('#hv',svg),hl=$('#hl',svg);let idx=0;
+  function show(i){idx=Math.max(0,Math.min(n-1,i));hv.style.display='';hl.setAttribute('x1',x(idx));hl.setAttribute('x2',x(idx));
+    rd.innerHTML=`<b>${o.xName||'Epoch'} ${o.xs[idx]}</b> — `+o.series.map(se=>`${se.name}: <b>${se.vals[idx].toFixed(dec)}</b>`).join(' · ');}
+  svg.addEventListener('mousemove',e=>{const r=svg.getBoundingClientRect(),px=(e.clientX-r.left)*W/r.width;show(Math.round((px-m.l)/((W-m.l-m.r)/(n-1||1))));});
+  svg.addEventListener('touchmove',e=>{const t=e.touches[0],r=svg.getBoundingClientRect(),px=(t.clientX-r.left)*W/r.width;show(Math.round((px-m.l)/((W-m.l-m.r)/(n-1||1))));},{passive:true});
+  svg.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();show(idx+1);}if(e.key==='ArrowLeft'){e.preventDefault();show(idx-1);}});
+}
+const C={tr:'#1D5A41',va:'#9A5F33'};
+
+function barRows(host,rows){rows.forEach(([l,pct,txt,alt])=>host.append(h('div',{class:'br'},h('span',{},l),h('div',{style:'display:flex;align-items:center'},h('div',{class:'tr',style:'flex:1'},h('div',{class:'fl'+(alt?' alt':''),style:`width:${Math.max(pct,.4)}%`})),h('span',{class:'vl'},txt)))));}
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const sp=x=>Math.log1p(Math.exp(x)),sg=x=>1/(1+Math.exp(-x));
+function stepper(pipe,read,S,cur,extra){const p=$(pipe);S.forEach((s,i)=>{if(i)p.append(h('span',{class:'sep'},'→'));const b=h('button',{type:'button',class:'node','aria-pressed':'false'},s[0]);b.addEventListener('click',()=>{cur=i;u();});p.append(b);});
+  function u(){$$('.node',p).forEach((b,i)=>b.setAttribute('aria-pressed',String(i===cur)));$(read).innerHTML=`<b>${S[cur][0]}.</b> ${S[cur][1]}`;if(extra)extra(cur);}u();}
+
+/* 1 */
+(function(){
+  const T={dis:['Discriminative','Predicts a target from an input, e.g. image → cat/dog.'],gen:['Generative','Learns patterns in the data distribution and can produce new samples, e.g. random latent vector → synthetic image.'],ae:['Autoencoder (middle ground)','Reconstructs inputs through a compressed representation. A basic autoencoder may give blurry outputs, and reconstruction alone does not guarantee diverse, high-quality sampling.']};
+  const IO={dis:['image','model','cat / dog'],gen:['random z','generator','new image'],ae:['image','compress → rebuild','reconstruction']};
+  let k='gen';
+  function u(){const [a,b,c]=IO[k];const box=(x,t,f)=>`<rect x="${x}" y="22" width="70" height="26" rx="4" fill="${f}" stroke="#12392A" stroke-width="1.2"/><text x="${x+35}" y="38" text-anchor="middle">${t}</text>`;
+    $('#gv-svg').innerHTML=box(8,a,'#FBF7EB')+'<path d="M80 35h22" stroke="#12392A"/>'+box(104,b,'#9FC7AF')+'<path d="M176 35h22" stroke="#12392A"/>'+box(184,c,'#E7DCC0').replace('x="184"','x="186"');
+    $('#gv-read').innerHTML=`<b>${T[k][0]}.</b> ${T[k][1]}`;}
+  seg($('#gv-seg'),Object.entries(T).map(([a,b])=>[a,b[0]]),'gen',v=>{k=v;u();});u();
+})();
+
+/* 2 */
+(function(){
+  let m='d';
+  function u(){const upd=n=>(m==='d'&&n==='D')||(m==='g'&&n==='G');
+    const node=(x,y,t,tag,on)=>`<rect x="${x}" y="${y}" width="46" height="26" rx="4" fill="${on?'#1D5A41':'#FBF7EB'}" stroke="#12392A" stroke-width="1.2"/><text x="${x+23}" y="${y+12}" text-anchor="middle" style="fill:${on?'#fff':'#18261F'}">${t}</text><text x="${x+23}" y="${y+22}" text-anchor="middle" style="fill:${on?'#fff':'#18261F'};font-size:4px">${tag}</text>`;
+    let s=node(6,37,'z','noise',false)+'<path d="M52 50h14" stroke="#12392A"/>'+node(68,37,'G',upd('G')?'updating':'frozen/idle',upd('G'))+'<path d="M114 50h14" stroke="#12392A" '+(m==='d'?'stroke-dasharray="3 2"':'')+'/>'+node(130,37,'fake',m==='d'?'.detach()':'kept in graph',false)+'<path d="M176 50h14" stroke="#12392A"/>'+node(192,37,'D',upd('D')?'updating':'weights frozen',upd('D'))+'<path d="M238 50h4" stroke="#12392A"/>'+node(242,37,'logit','',false).replace('width="46"','width="34"');
+    if(m==='d')s+=node(130,4,'real x','target 1',false)+'<path d="M176 17L202 37" stroke="#12392A"/>';
+    s+=`<text x="140" y="92" text-anchor="middle" style="font-size:5px">${m==='d'?'fake target 0 · real target 1':'fake target 1 (looks real)'}</text>`;
+    $('#fl-svg').innerHTML=s;
+    $('#fl-read').innerHTML=m==='d'?'<b>Discriminator update.</b> Real images go to D with target 1; <code>fake.detach()</code> goes to D with target 0. Only <b>D</b> parameters change; no gradient reaches G.':'<b>Generator update.</b> A fresh fake batch (<b>not</b> detached) goes through D (weights frozen) with target 1. Gradients pass through D into G, and only <b>G</b> parameters change.';}
+  seg($('#fl-seg'),[['d','1 · Update discriminator'],['g','2 · Update generator']],'d',v=>{m=v;u();});u();
+})();
+
+/* 3 */
+(function(){
+  function n(){const p=+$('#nr-p').value,a=p/255,b=(a-.5)/.5;$('#nr-pv').textContent=p;$('#nr-bars').innerHTML='';barRows($('#nr-bars'),[['0–255',p/255*100,String(p)],['[0, 1]',a*100,a.toFixed(3)],['[−1, 1]',(b+1)/2*100,b.toFixed(3),true]]);
+    $('#nr-read').innerHTML=`${p} / 255 = ${a.toFixed(3)} → (${a.toFixed(3)} − 0.5) / 0.5 = <b>${b.toFixed(3)}</b>. Bar length shows position within each range.`;}
+  $('#nr-p').addEventListener('input',n);n();
+  let m='ok';
+  function s(){$('#sc-bars').innerHTML='';barRows($('#sc-bars'),[['Real range',m==='ok'?100:50,m==='ok'?'[−1, 1]':'[0, 1]'],['Generated (tanh)',100,'[−1, 1]',true]]);
+    $('#sc-read').innerHTML=m==='ok'?'Both ranges match: the discriminator must look at image structure to tell real from fake.':'Real images in [0, 1] never go negative, but tanh output does. A discriminator could learn “any negative pixel = fake”, a scale shortcut instead of image structure.';}
+  seg($('#sc-seg'),[['ok','Real in [−1, 1] (matches tanh)'],['bad','Real left in [0, 1]']],'ok',v=>{m=v;s();});s();
+})();
+
+/* 4-5 */
+(function(){
+  const conv=(i,o,bias,bn)=>i*o*16+(bias?o:0)+(bn?2*o:0);
+  const D=[['Input','3 × 64 × 64 RGB image.',0],['Conv 3→64 + LeakyReLU','k4, s2, p1: (64 + 2 − 4)/2 + 1 = 32 → 64 × 32 × 32. No BatchNorm in the first layer.',conv(3,64,1,0)],['Conv 64→128 + BN + LeakyReLU','→ 128 × 16 × 16.',conv(64,128,0,1)],['Conv 128→256 + BN + LeakyReLU','→ 256 × 8 × 8.',conv(128,256,0,1)],['Conv 256→512 + BN + LeakyReLU','→ 512 × 4 × 4.',conv(256,512,0,1)],['Conv 512→1 (k4, s1, p0)','4 × 4 → 1 × 1: one logit per image.',512*16+1]];
+  const G=[['Latent z','100 × 1 × 1 random vector.',0],['ConvT 100→512 + BN + ReLU','k4, s1, p0: (1−1)·1 − 0 + 4 = 4 → 512 × 4 × 4.',100*512*16+2*512],['ConvT 512→256 + BN + ReLU','k4, s2, p1: (4−1)·2 − 2 + 4 = 8 → 256 × 8 × 8.',512*256*16+2*256],['ConvT 256→128 + BN + ReLU','→ 128 × 16 × 16.',256*128*16+2*128],['ConvT 128→64 + BN + ReLU','→ 64 × 32 × 32.',128*64*16+2*64],['ConvT 64→3 + Tanh','→ 3 × 64 × 64, values in [−1, 1].',64*3*16]];
+  function mk(pipe,read,bars,S,tot,name){let cur=S.length-1;const p=$(pipe);S.forEach((s,i)=>{if(i)p.append(h('span',{class:'sep'},'→'));const b=h('button',{type:'button',class:'node','aria-pressed':'false'},s[0].split(' ')[0]+(i?' '+i:''));b.setAttribute('aria-label',s[0]);b.addEventListener('click',()=>{cur=i;u();});p.append(b);});
+    function u(){$$('.node',p).forEach((b,i)=>b.setAttribute('aria-pressed',String(i===cur)));$(read).innerHTML=`<b>${S[cur][0]}.</b> ${S[cur][1]}`+(S[cur][2]?` Parameters: <b>${fmt(S[cur][2])}</b>.`:'');}u();
+    const sum=S.reduce((a,s)=>a+s[2],0),mx=Math.max(...S.map(s=>s[2]));$(bars).innerHTML='';barRows($(bars),S.slice(1).map((s,i)=>[`Layer ${i+1}`,s[2]/mx*100,fmt(s[2]),i%2===1]));$(bars).append(h('p',{class:'cap'},`Per-layer counts derived from the layer definitions sum to ${fmt(sum)}, matching the notebook's printed ${name} parameter count (${fmt(tot)}).`));}
+  mk('#dc-pipe','#dc-read','#dc-bars',D,2765633,'discriminator');mk('#gn-pipe','#gn-read','#gn-bars',G,3576704,'generator');
+  function lr(){const s=$('#lr-s').value/100;$('#lr-sv').textContent=s.toFixed(2);const xs=[];for(let i=-8;i<=8;i++)xs.push((i/2).toFixed(1));
+    lineChart($('#lr-chart'),{xs,xTitle:'Input',yTitle:'Output',dec:2,aria:'ReLU and LeakyReLU curves',series:[{name:'ReLU',vals:xs.map(x=>Math.max(0,x)),color:'#18261F'},{name:`LeakyReLU (slope ${s.toFixed(2)})`,vals:xs.map(x=>x>=0?+x:s*x),color:C.va,dash:'6 4',shape:'sq'}]});}
+  $('#lr-s').addEventListener('input',lr);lr();
+})();
+
+/* 6 */
+(function(){
+  function u(){const r=$('#lo-r').value/10,f=$('#lo-f').value/10;$('#lo-rv').textContent=r.toFixed(1);$('#lo-fv').textContent=f.toFixed(1);
+    const a=sp(-r),b=sp(f),LD=a+b,LG=sp(-f);$('#lo-bars').innerHTML='';barRows($('#lo-bars'),[['BCE(D(x), 1)',Math.min(100,a*20),a.toFixed(3)],['BCE(D(G(z)), 0)',Math.min(100,b*20),b.toFixed(3)],['L_D (sum)',Math.min(100,LD*20),LD.toFixed(3),true],['L_G = BCE(D(G(z)), 1)',Math.min(100,LG*20),LG.toFixed(3),true]]);
+    $('#lo-read').innerHTML=`P(real | x) = ${sg(r).toFixed(3)}; P(real | G(z)) = ${sg(f).toFixed(3)}. <b>L<sub>D</sub> = ${LD.toFixed(3)}</b>, <b>L<sub>G</sub> = ${LG.toFixed(3)}</b>. At chance (both logits 0), L<sub>D</sub> = 2·ln 2 = 1.386 and L<sub>G</sub> = 0.693. Bars cap at 5.`;}
+  ['lo-r','lo-f'].forEach(i=>$('#'+i).addEventListener('input',u));$$('#lo-viz [data-r]').forEach(b=>b.addEventListener('click',()=>{$('#lo-r').value=b.dataset.r;$('#lo-f').value=b.dataset.f;u();}));u();
+  const xs=[];for(let i=-6;i<=6;i++)xs.push(String(i));
+  lineChart($('#gr-chart'),{xs,xTitle:'Fake logit D(G(z)): negative = D is sure it is fake',yTitle:'|gradient| w.r.t. logit',dec:3,ymin:0,ymax:1,aria:'Gradient size of non-saturating versus saturating generator loss as the fake logit varies',series:[{name:'Non-saturating: BCE(D(G(z)), 1)',vals:xs.map(x=>1-sg(+x)),color:C.tr},{name:'Saturating (comparison only): log(1 − D(G(z)))',vals:xs.map(x=>sg(+x)),color:C.va,dash:'6 4',shape:'sq'}]});
+  stepper('#od-pipe','#od-read',[['1 · Make fakes','Sample noise and generate a batch of fake images.'],['2 · Train D','Real batch (target 1) and <code>fake.detach()</code> (target 0); update D only.'],['3 · Fresh fakes','Generate (or reuse) fake images for the generator step; here a new noise batch is used, not detached.'],['4 · Freeze D weights','<code>requires_grad=False</code> on D: weights stay fixed, but gradients still flow through D to the generated image.'],['5 · Train G','Loss BCE(D(G(z)), 1); update G only.']],1);
+})();
+
+/* 7 */
+(function(){
+  const Dl=[.522,1.157,.843,.896,.854],Gl=[8.753,6.482,4.202,4.066,4.370];
+  lineChart($('#tl-chart'),{xs:['1','2','3','4','5'],xTitle:'Epoch',yTitle:'Mean loss',dec:3,ymin:0,aria:'Discriminator and generator losses over five epochs',series:[{name:'Discriminator loss',vals:Dl,color:C.tr},{name:'Generator loss',vals:Gl,color:C.va,dash:'6 4',shape:'sq'}]});
+  Dl.forEach((d,i)=>$('#tl-tb').append(h('tr',{},h('td',{},i+1),h('td',{class:'mono'},d.toFixed(3)),h('td',{class:'mono'},Gl[i].toFixed(3)))));
+  $('#tl-read').innerHTML='Epoch 1: D wins early (D loss 0.522, G loss 8.753). By epoch 3 the generator loss has fallen to about 4 while D loss settles near 0.85–0.90. Reference: a discriminator exactly at chance would give L<sub>D</sub> = 1.386. These curves alone say nothing about sample quality or diversity.';
+})();
+
+/* 8 */
+(function(){
+  const X={mc:['Mode collapse','The generator produces limited varieties of outputs: many different latent vectors give nearly identical faces. Clues: repeated colours, repeated layouts, near-identical faces across a sample grid.'],vg:['Vanishing gradients','If D becomes too strong, its output becomes extremely confident and G receives weak or unhelpful gradients, slowing learning.'],ti:['Training instability','Small changes in learning rate, architecture, batch size or update balance can change the dynamics. G and D should learn at compatible rates.'],hp:['Hyperparameters','Learning rate, batch size, latent dimension, discriminator updates per generator update, and normalization/regularization choices are all worth experimenting with.']};
+  const f=k=>$('#ch-read').innerHTML=`<b>${X[k][0]}.</b> ${X[k][1]}`;seg($('#ch-seg'),Object.entries(X).map(([a,b])=>[a,b[0]]),'mc',f);f('mc');
+  const r=rng(5),V=Array.from({length:16},()=>r());
+  function mc(){const c=$('#mc-c').value/100;$('#mc-cv').textContent=Math.round(c*100)+'%';const g=$('#mc-grid');g.innerHTML='';const vals=V.map(v=>v*(1-c)+.5*c);
+    vals.forEach(v=>{const d=h('div',{},String(Math.min(9,Math.floor(v*10))));d.style.background=`color-mix(in srgb, var(--g700) ${Math.round(v*100)}%, var(--sand))`;d.style.color=v>.5?'#fff':'#18261F';g.append(d);});
+    const distinct=new Set(vals.map(v=>Math.min(9,Math.floor(v*10)))).size;$('#mc-read').innerHTML=`Distinct output values in the grid: <b>${distinct} of 16</b>. `+(c>.7?'Nearly every latent vector gives the same result: a mode-collapse pattern.':'Healthy diversity.');}
+  $('#mc-c').addEventListener('input',mc);mc();
+})();
+
+/* 9 */
+(function(){
+  const A={sty:['StyleGAN','High-quality image synthesis. A style-based generator design gives more control over visual attributes at different scales.'],sr:['SRGAN','Super-resolution. Adversarial learning produces perceptually convincing high-resolution images from low-resolution inputs; pixel-level similarity alone may not capture perceptual sharpness.'],cyc:['CycleGAN','Unpaired image-to-image translation. Learns mappings between two visual domains without paired examples, e.g. horse ↔ zebra or one artistic style ↔ another.']};
+  const f=k=>$('#ap-read').innerHTML=`<b>${A[k][0]}.</b> ${A[k][1]}`;seg($('#ap-seg'),Object.entries(A).map(([a,b])=>[a,b[0]]),'sty',f);f('sty');
+})();
+
+/* quizzes */
+const QZ={
+ q1:{q:'A model receives an image and predicts whether it contains a cat or a dog. What kind of model is this?',o:['Generative','Adversarial','Latent-variable only','Discriminative'],a:3,e:'It predicts a target label from an input image: a discriminative task.'},
+ q2:{q:'A model samples random numbers and produces a new image. What is its primary task?',o:['Image classification','Image generation','Image localization','Image retrieval'],a:1,e:'It creates a new synthetic sample, so its primary task is image generation.'},
+ q3:{q:'Which GAN network maps a latent noise vector into a synthetic image?',o:['Generator','Discriminator','Optimizer','DataLoader'],a:0,e:'The generator transforms a latent vector into a synthetic image.'},
+ q4:{q:'During discriminator training, how should its output for a real training image move?',o:['Toward the fake target','Toward a random class','Toward the real target','Toward a constant value'],a:2,e:'Real images are positive examples, so the prediction should move toward the real target.'},
+ q5:{q:'The generator ends with tanh. Which range should the real training images use after normalization?',o:['[0, 1]','[−1, 1]','[−255, 255]','[0, 255]'],a:1,e:'tanh outputs values in [−1, 1], so real images should use the same range.'},
+ q6:{q:'Why should real and generated images use compatible numeric ranges?',o:['To make every image grayscale','To remove trainable generator parameters','To prevent an obvious scale shortcut for the discriminator','To balance the number of dataset labels'],a:2,e:'Different scales would let the discriminator separate them by scale instead of image structure.'},
+ q7:{q:'Which layer type is commonly used to increase spatial dimensions in a DCGAN generator?',o:['Conv2d','MaxPool2d','AdaptiveAvgPool2d','ConvTranspose2d'],a:3,e:'Transposed convolutions learn an upsampling transformation.'},
+ q8:{q:'Which activation is used at the end of this generator to match the normalized image range?',o:['Sigmoid','Tanh','Softmax','LeakyReLU'],a:1,e:'Tanh produces values in [−1, 1], matching the normalized training images.'},
+ q9:{q:'Why is fake.detach() used during the discriminator update?',o:['To permanently freeze the generator','To normalize generated pixel values','To convert generated images into class labels','To stop gradients flowing into the generator during this step'],a:3,e:'Detaching prevents the discriminator update from backpropagating into the generator.'},
+ q10:{q:'In the non-saturating GAN objective, which target is used for generated images during the generator update?',o:['Fake (0)','Real (1)','A randomly sampled class','No target is used'],a:1,e:'The generator is optimized so the discriminator classifies its images as real.'},
+ q11:{q:'Which loss function is used for the discriminator and generator in this notebook?',o:['Mean squared error','Categorical cross-entropy','Binary cross-entropy with logits','Triplet margin loss'],a:2,e:'BCEWithLogitsLoss combines sigmoid with binary cross-entropy for the real/fake objectives.'},
+ q12:{q:'During the generator update, why are discriminator parameters temporarily set to requires_grad=False?',o:['To stop all gradients through the GAN','To prevent discriminator weight updates while gradients still pass through it to the generator','To remove the discriminator from the forward pass','To convert the discriminator into a generator'],a:1,e:'D weights are not updated in the generator step, but its operations stay in the graph so gradients reach G.'},
+ q13:{q:'Which statement about GAN loss curves is most accurate?',o:['Both losses must decrease every epoch','Discriminator loss alone measures image quality','A zero generator loss guarantees no mode collapse','Losses should be interpreted with generated samples and diversity'],a:3,e:'GAN losses are competitive and give no complete measure of perceptual quality or diversity.'},
+ q14:{q:'Why inspect generated image grids alongside GAN loss curves?',o:['Losses alone do not show image quality and diversity','Images make training losses unnecessary','Discriminator loss is a direct image-quality score','GAN losses cannot be calculated reliably'],a:0,e:'Losses describe adversarial objectives, not perceptual quality or output diversity.'},
+ q15:{q:'A generator produces nearly the same face for many different latent vectors. Which problem does this suggest?',o:['Image localization','Class imbalance','Mode collapse','Label smoothing'],a:2,e:'Mode collapse is a generator producing limited varieties of outputs despite different latent inputs.'},
+ q16:{q:'Which GAN family is designed for unpaired image-to-image translation?',o:['StyleGAN','SRGAN','DCGAN','CycleGAN'],a:3,e:'CycleGAN learns mappings between domains without requiring paired examples.'},
+ q17:{q:'Which application best matches SRGAN?',o:['Verifying whether two signatures match','Increasing image resolution with perceptually realistic detail','Detecting objects with bounding boxes','Retrieving nearest-neighbour embeddings'],a:1,e:'SRGAN targets super-resolution, reconstructing plausible high-frequency detail.'},
+ q18:{q:'Which architecture uses a style-based latent design for high-quality image synthesis?',o:['StyleGAN','CycleGAN','SRGAN','Faster R-CNN'],a:0,e:'StyleGAN uses a style-based generator design for high-quality synthesis.'},
+ q19:{q:'What is the main input to the generator in this notebook?',o:['A real image with its class label','A bounding-box coordinate set','A random latent vector','A semantic segmentation mask'],a:2,e:'The generator starts from a sampled latent noise vector.'},
+ q20:{q:'What issue occurs when many latent inputs produce very similar generated outputs?',o:['RoI misalignment','Over-segmentation','Class confusion','Mode collapse'],a:3,e:'Mode collapse describes a generator with limited output diversity.'}
+};
+$$('[data-quiz]').forEach(host=>{const q=QZ[host.dataset.quiz],name='qz-'+host.dataset.quiz;const fb=h('div',{class:'qfb',role:'status','aria-live':'polite'}),fs=h('fieldset',{},h('legend',{class:'sr'},q.q));
+  q.o.forEach((t,i)=>{const id=name+i,inp=h('input',{type:'radio',name,id}),row=h('div',{class:'qo'},inp,h('label',{for:id},t));
+    inp.addEventListener('change',()=>{$$('.qo',fs).forEach(r=>r.classList.remove('right','wrong'));if(i===q.a){row.classList.add('right');fb.innerHTML='<b>Correct.</b> '+q.e;$$('input',fs).forEach(x=>x.disabled=true);}else{row.classList.add('wrong');fb.innerHTML='<b>Not quite.</b> Try another option.';}});fs.append(row);});
+  host.append(h('p',{class:'ql'},'Check yourself'),h('p',{class:'qt'},q.q),fs,fb);});
+
+/* flashcards */
+[['What is a GAN, and why does it contain two networks?','A generator makes images from latent vectors and a discriminator judges real vs. generated; training them against each other pushes the generator toward realistic samples.'],
+ ['What is the role of the latent vector?','Random input to the generator: different latent vectors lead to different generated images.'],
+ ['Why normalize images to [−1, 1] with a tanh output?','Tanh outputs [−1, 1]; matching the real range avoids a scale shortcut for the discriminator.'],
+ ['Why does the discriminator use convolutions?','It is a CNN classifier that learns spatial features of images and downsamples to one real/fake logit.'],
+ ['What is the purpose of ConvTranspose2d in the generator?','A learned upsampling that grows the small latent feature map into a 64 × 64 image.'],
+ ['Explain the discriminator loss and the non-saturating generator loss.','L_D = BCE(D(x),1) + BCE(D(G(z)),0). L_G = BCE(D(G(z)),1): the generator is trained so its fakes are labelled real, which keeps a useful gradient when D rejects fakes strongly.'],
+ ['Why detach fake images during the discriminator update?','So only D\'s parameters update; in the generator step you do not detach, so gradients pass through D into G.'],
+ ['What is mode collapse, and how would you detect it?','The generator produces limited varieties of output. Look for repeated colours, layouts or near-identical faces in a sample grid built from different latent vectors.'],
+ ['Why are GAN losses difficult to interpret?','The two networks compete, so one loss can rise as the other falls; low D loss can mean D overpowers G, and low G loss does not prove diversity or realism. Inspect samples too.'],
+ ['Compare StyleGAN, SRGAN and CycleGAN.','StyleGAN: high-quality synthesis with style control. SRGAN: super-resolution. CycleGAN: unpaired image-to-image translation.'],
+ ['Describe the data flow from noise to prediction, and what changes in each update.','z → generator → fake image → discriminator → logit. D update changes D weights (real → 1, detached fake → 0); G update changes G weights (fake → 1, gradients through frozen D).'],
+ ['Name one sign of mode collapse and one way to monitor it.','Sign: near-identical faces across latent vectors. Monitor: the fixed-noise sample grid each epoch, alongside loss curves.']
+].forEach(([q,a])=>{const b=h('button',{type:'button',class:'fc','aria-expanded':'false',style:'min-height:110px'},h('div',{class:'q'},q),h('span',{class:'hint'},'Click to reveal'),h('div',{class:'a'},a));b.addEventListener('click',()=>b.setAttribute('aria-expanded',String(b.getAttribute('aria-expanded')!=='true')));$('#fcs').append(b);});
+</script>
+</body>
+</html>
